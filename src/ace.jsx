@@ -3,12 +3,11 @@ var React = require('react');
 
 module.exports = React.createClass({
   displayName: 'ReactAce',
-  
+
   propTypes: {
     mode  : React.PropTypes.string,
     theme : React.PropTypes.string,
     name : React.PropTypes.string,
-    className: React.PropTypes.string,
     height : React.PropTypes.string,
     width : React.PropTypes.string,
     fontSize : React.PropTypes.number,
@@ -20,7 +19,6 @@ module.exports = React.createClass({
     readOnly : React.PropTypes.bool,
     highlightActiveLine : React.PropTypes.bool,
     showPrintMargin : React.PropTypes.bool,
-    cursorStart: React.PropTypes.number,
     editorProps: React.PropTypes.object
   },
   getDefaultProps: function() {
@@ -39,7 +37,6 @@ module.exports = React.createClass({
       readOnly   : false,
       highlightActiveLine : true,
       showPrintMargin     : true,
-      cursorStart: 1,
       editorProps : {}
     };
   },
@@ -52,46 +49,47 @@ module.exports = React.createClass({
   componentDidMount: function() {
     this.editor = ace.edit(this.props.name);
 
-    var editorProps = Object.keys(this.props.editorProps);
+    var editorProps = Object.getOwnPropertyNames(this.props.editorProps)
     for (var i = 0; i < editorProps.length; i++) {
-      this.editor[editorProps[i]] = this.props.editorProps[editorProps[i]];
+      this.editor[editorProps[i]] = this.props.editorProps[editorProps[i]]
     }
 
     this.editor.getSession().setMode('ace/mode/'+this.props.mode);
     this.editor.setTheme('ace/theme/'+this.props.theme);
     this.editor.setFontSize(this.props.fontSize);
-    this.editor.setValue(this.props.value, this.props.cursorStart);
+    this.editor.on('change', this.onChange);
+    this.editor.setValue(this.props.value, 1);
     this.editor.renderer.setShowGutter(this.props.showGutter);
     this.editor.setOption('maxLines', this.props.maxLines);
     this.editor.setOption('readOnly', this.props.readOnly);
     this.editor.setOption('highlightActiveLine', this.props.highlightActiveLine);
     this.editor.setShowPrintMargin(this.props.setShowPrintMargin);
-    this.editor.on('change', this.onChange);
 
     if (this.props.onLoad) {
       this.props.onLoad(this.editor);
     }
   },
-  
+
   componentWillUnmount: function() {
+    this.editor.destroy();
     this.editor = null;
   },
-  
-  componentWillReceiveProps: function(nextProps) {
-    this.editor = ace.edit(nextProps.name);
-    this.editor.getSession().setMode('ace/mode/'+nextProps.mode);
-    this.editor.setTheme('ace/theme/'+nextProps.theme);
-    this.editor.setFontSize(nextProps.fontSize);
-    this.editor.setOption('maxLines', nextProps.maxLines);
-    this.editor.setOption('readOnly', nextProps.readOnly);
-    this.editor.setOption('highlightActiveLine', nextProps.highlightActiveLine);
-    this.editor.setShowPrintMargin(nextProps.setShowPrintMargin);
-    if (this.editor.getValue() !== nextProps.value) {
-      this.editor.setValue(nextProps.value, nextProps.cursorStart);
+
+  componentDidUpdate: function() {
+    this.editor = ace.edit(this.props.name);
+    this.editor.getSession().setMode('ace/mode/'+this.props.mode);
+    this.editor.setTheme('ace/theme/'+this.props.theme);
+    this.editor.setFontSize(this.props.fontSize);
+    this.editor.setOption('maxLines', this.props.maxLines);
+    this.editor.setOption('readOnly', this.props.readOnly);
+    this.editor.setOption('highlightActiveLine', this.props.highlightActiveLine);
+    this.editor.setShowPrintMargin(this.props.setShowPrintMargin);
+    if (this.editor.getValue() !== this.props.value) {
+      this.editor.setValue(this.props.value, 1);
     }
-    this.editor.renderer.setShowGutter(nextProps.showGutter);
-    if (nextProps.onLoad) {
-      nextProps.onLoad(this.editor);
+    this.editor.renderer.setShowGutter(this.props.showGutter);
+    if (this.props.onLoad) {
+      this.props.onLoad(this.editor);
     }
   },
 
@@ -100,7 +98,6 @@ module.exports = React.createClass({
       width: this.props.width,
       height: this.props.height
     };
-    var className = this.props.className;
-    return (<div id={this.props.name} className={className} onChange={this.onChange} style={divStyle}></div>);
+    return (<div id={this.props.name} onChange={this.onChange} style={divStyle}></div>);
   }
 });
